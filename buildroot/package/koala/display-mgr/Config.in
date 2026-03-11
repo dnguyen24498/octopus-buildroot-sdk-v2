@@ -1,0 +1,5 @@
+config BR2_PACKAGE_DISPLAY_MGR
+    bool "display-mgr"
+    select BR2_PACKAGE_LVGL
+    help
+      LVGL display manager service

@@ -10,3 +10,9 @@ duo-pinmux -w GP14/GP14 > /dev/null
 # Insmod PWM Module
 insmod /mnt/system/ko/cv181x_pwm.ko
 
+# Enable GPIO in sleep mode
+echo s2idle > /sys/power/mem_sleep
+
+# Export LCD backlight GPIO
+echo 507 > /sys/class/gpio/export
+echo high > /sys/class/gpio/gpio507/direction

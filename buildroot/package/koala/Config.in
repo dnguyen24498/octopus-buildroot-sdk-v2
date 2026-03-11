@@ -1,0 +1,3 @@
+source "package/koala/power-mgr/Config.in"
+source "package/koala/lvgl/Config.in"
+source "package/koala/display-mgr/Config.in"

@@ -1,0 +1,4 @@
+config BR2_PACKAGE_POWER_MGR
+	bool "power manager"
+	help
+	  Power button manager.
