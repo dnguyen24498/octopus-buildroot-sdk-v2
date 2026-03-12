@@ -59,7 +59,13 @@ jobs:
           expect \
           ccache \
           xz-utils
-        python3 -m pip install --break-system-packages jinja2
+        python3 -m ensurepip --upgrade
+        python3 -m pip install --upgrade pip --break-system-packages   
+        python3 -m pip install --break-system-packages \
+          jinja2 \
+          pyyaml \
+          jsonschema
+
 
     # ✅ build firmware thật
     - name: Build SDK
