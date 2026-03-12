@@ -88,6 +88,7 @@ jobs:
       id: buildsdk
       continue-on-error: true
       run: |
+        export FORCE_UNSAFE_CONFIGURE=1
         chmod +x build.sh
         ./build.sh milkv-duo256m-musl-riscv64-sd
 
