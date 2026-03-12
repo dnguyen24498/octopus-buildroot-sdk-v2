@@ -61,6 +61,7 @@ jobs:
           device-tree-compiler \
           expect \
           ccache \
+          xxd \
           xz-utils
 
     # ✅ build firmware thật
