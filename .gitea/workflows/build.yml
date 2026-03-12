@@ -10,6 +10,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    
+    - name: Install NodeJS for actions
+      run: |
+        apt update
+        apt install -y nodejs npm git
+
 
     - name: Checkout
       uses: actions/checkout@v3
@@ -67,11 +73,11 @@ jobs:
     - name: Upload IMG.xz to MinIO
       run: |
         BASENAME=$(basename $COMPRESSED_IMG)
-    
+
         mc alias set local \
           ${{ secrets.MINIO_ENDPOINT }} \
           ${{ secrets.MINIO_ACCESS_KEY }} \
           ${{ secrets.MINIO_SECRET_KEY }}
-    
+
         mc cp $COMPRESSED_IMG \
           local/${{ secrets.MINIO_BUCKET }}/milkv/${{ gitea.ref_name }}/$BASENAME
