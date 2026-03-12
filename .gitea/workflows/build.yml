@@ -10,27 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    
-    - name: Install NodeJS for actions
+
+    # ✅ install git (checkout manual cần)
+    - name: Install Git
       run: |
         apt update
-        apt install -y nodejs npm git
-    
-    - name: DEBUG HOLD
+        apt install -y git
+
+    # ✅ checkout đúng commit vừa push (QUAN TRỌNG)
+    - name: Checkout exact commit
       run: |
-        echo "===== CI CONTAINER IS ALIVE ====="
-        echo "Sleeping for debug..."
-        sleep 999999
+        git init
+        git remote add origin https://${{ secrets.GITEA_TOKEN }}@git.nguynx.uk/${{ gitea.repository }}.git
+        git fetch --depth 1 origin ${{ gitea.sha }}
+        git checkout FETCH_HEAD
 
-    - name: Checkout
-      uses: actions/checkout@v3
+    # ✅ verify build đúng commit
+    - name: Verify commit
+      run: |
+        echo "Expected commit: ${{ gitea.sha }}"
+        git log --oneline -1
 
+    # ✅ SDK dependency
     - name: Install SDK deps
       run: |
         apt update
         DEBIAN_FRONTEND=noninteractive apt install -y \
           build-essential \
-          git \
           wget \
           curl \
           python3 \
@@ -52,29 +58,35 @@ jobs:
           device-tree-compiler \
           expect \
           ccache \
-          xz-utils 
+          xz-utils
 
+    # ✅ build firmware thật
     - name: Build SDK
       run: |
         chmod +x build.sh
         ./build.sh milkv-duo256m-musl-riscv64-sd
 
+    # ✅ tìm file img
     - name: Find firmware image
       run: |
         IMG_FILE=$(find out -name "*.img" | head -n 1)
         echo "IMG_FILE=$IMG_FILE" >> $GITEA_ENV
+        echo "Found image: $IMG_FILE"
 
+    # ✅ compress firmware
     - name: Compress IMG with xz
       run: |
-        xz -T0 -9 $IMG_FILE
+        xz -T4 -6 $IMG_FILE
         echo "COMPRESSED_IMG=${IMG_FILE}.xz" >> $GITEA_ENV
 
+    # ✅ install MinIO client
     - name: Install MinIO Client
       run: |
         curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
         chmod +x mc
         mv mc /usr/local/bin/
 
+    # ✅ upload lên MinIO
     - name: Upload IMG.xz to MinIO
       run: |
         BASENAME=$(basename $COMPRESSED_IMG)
