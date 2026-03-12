@@ -1,0 +1,77 @@
+name: Build Milkv Image
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install SDK deps
+      run: |
+        apt update
+        DEBIAN_FRONTEND=noninteractive apt install -y \
+          build-essential \
+          git \
+          wget \
+          curl \
+          python3 \
+          bc \
+          bison \
+          flex \
+          libssl-dev \
+          make \
+          cmake \
+          ninja-build \
+          rsync \
+          unzip \
+          chrpath \
+          gawk \
+          texinfo \
+          libncurses5-dev \
+          lz4 \
+          zstd \
+          device-tree-compiler \
+          expect \
+          ccache \
+          xz-utils 
+
+    - name: Build SDK
+      run: |
+        chmod +x build.sh
+        ./build.sh milkv-duo256m-musl-riscv64-sd
+
+    - name: Find firmware image
+      run: |
+        IMG_FILE=$(find out -name "*.img" | head -n 1)
+        echo "IMG_FILE=$IMG_FILE" >> $GITEA_ENV
+
+    - name: Compress IMG with xz
+      run: |
+        xz -T0 -9 $IMG_FILE
+        echo "COMPRESSED_IMG=${IMG_FILE}.xz" >> $GITEA_ENV
+
+    - name: Install MinIO Client
+      run: |
+        curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+        chmod +x mc
+        mv mc /usr/local/bin/
+
+    - name: Upload IMG.xz to MinIO
+      run: |
+        BASENAME=$(basename $COMPRESSED_IMG)
+    
+        mc alias set local \
+          ${{ secrets.MINIO_ENDPOINT }} \
+          ${{ secrets.MINIO_ACCESS_KEY }} \
+          ${{ secrets.MINIO_SECRET_KEY }}
+    
+        mc cp $COMPRESSED_IMG \
+          local/${{ secrets.MINIO_BUCKET }}/milkv/${{ gitea.ref_name }}/$BASENAME
