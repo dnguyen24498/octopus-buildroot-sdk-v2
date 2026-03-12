@@ -59,6 +59,7 @@ jobs:
           expect \
           ccache \
           xz-utils
+        python3 -m pip install --break-system-packages jinja2
 
     # ✅ build firmware thật
     - name: Build SDK
