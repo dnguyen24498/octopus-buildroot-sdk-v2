@@ -84,19 +84,19 @@ jobs:
           xz-utils \
           ccache
 
-    # ✅ Build SDK
     - name: Build SDK
+      id: buildsdk
       continue-on-error: true
       run: |
         chmod +x build.sh
         ./build.sh milkv-duo256m-musl-riscv64-sd
-    
-    # ✅ GIỮ CONTAINER SỐNG ĐỂ DEBUG
+
     - name: HOLD CONTAINER FOR DEBUG
-      if: failure()
+      if: steps.buildsdk.outcome == 'failure'
       run: |
         echo "Build failed, container held for debug"
         sleep 999999
+
 
     # ✅ Find firmware
     - name: Find firmware image
