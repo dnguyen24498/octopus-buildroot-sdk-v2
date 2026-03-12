@@ -40,6 +40,9 @@ jobs:
           wget \
           curl \
           python3 \
+          python3-jinja2 \
+          python3-yaml \
+          python3-jsonschema \
           bc \
           bison \
           flex \
@@ -59,11 +62,6 @@ jobs:
           expect \
           ccache \
           xz-utils
-        python3 -m pip install \
-              --break-system-packages \
-              jinja2 \
-              pyyaml \
-              jsonschema
 
     # ✅ build firmware thật
     - name: Build SDK
