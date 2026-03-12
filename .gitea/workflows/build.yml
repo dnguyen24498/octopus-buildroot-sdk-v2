@@ -11,13 +11,13 @@ jobs:
 
     steps:
 
-    # ✅ install git (checkout manual cần)
+    # ✅ Install Git
     - name: Install Git
       run: |
         apt update
         apt install -y git
 
-    # ✅ checkout đúng commit vừa push (QUAN TRỌNG)
+    # ✅ Checkout đúng commit vừa push
     - name: Checkout exact commit
       run: |
         git init
@@ -25,80 +25,100 @@ jobs:
         git fetch --depth 1 origin ${{ gitea.sha }}
         git checkout FETCH_HEAD
 
-    # ✅ verify build đúng commit
+    # ✅ Verify commit
     - name: Verify commit
       run: |
         echo "Expected commit: ${{ gitea.sha }}"
         git log --oneline -1
 
-    # ✅ SDK dependency
+    # ✅ FULL MilkV SDK dependencies
     - name: Install SDK deps
       run: |
         apt update
         DEBIAN_FRONTEND=noninteractive apt install -y \
+          pkg-config \
           build-essential \
+          ninja-build \
+          automake \
+          autoconf \
+          libtool \
           wget \
           curl \
-          python3 \
+          git \
+          gcc \
+          libssl-dev \
+          bc \
+          slib \
+          squashfs-tools \
+          android-sdk-libsparse-utils \
+          jq \
+          python3-distutils \
+          scons \
+          parallel \
+          tree \
+          python3-dev \
           python3-jinja2 \
           python3-yaml \
           python3-jsonschema \
-          bc \
-          bison \
+          device-tree-compiler \
+          ssh \
+          cpio \
+          fakeroot \
+          libncurses5 \
           flex \
-          libssl-dev \
-          make \
-          cmake \
-          ninja-build \
+          bison \
+          libncurses5-dev \
+          genext2fs \
           rsync \
           unzip \
-          chrpath \
-          gawk \
-          texinfo \
-          libncurses5-dev \
+          dosfstools \
+          mtools \
+          tcl \
+          openssh-client \
+          cmake \
+          expect \
+          python-is-python3 \
+          xxd \
           lz4 \
           zstd \
-          device-tree-compiler \
-          expect \
-          ccache \
-          xxd \
-          xz-utils
+          xz-utils \
+          ccache
 
-    # ✅ build firmware thật
+    # ✅ Build SDK
     - name: Build SDK
       run: |
         chmod +x build.sh
         ./build.sh milkv-duo256m-musl-riscv64-sd
 
-    # ✅ tìm file img
+    # ✅ Find firmware
     - name: Find firmware image
       run: |
         IMG_FILE=$(find out -name "*.img" | head -n 1)
         echo "IMG_FILE=$IMG_FILE" >> $GITEA_ENV
         echo "Found image: $IMG_FILE"
 
-    # ✅ compress firmware
+    # ✅ Compress
     - name: Compress IMG with xz
       run: |
         xz -T4 -6 $IMG_FILE
         echo "COMPRESSED_IMG=${IMG_FILE}.xz" >> $GITEA_ENV
 
-    # ✅ install MinIO client
+    # ✅ Install MinIO Client
     - name: Install MinIO Client
       run: |
         curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
         chmod +x mc
         mv mc /usr/local/bin/
 
-    # ✅ upload lên MinIO
+    # ✅ Upload firmware to MinIO
     - name: Upload IMG.xz to MinIO
       run: |
         BASENAME=$(basename $COMPRESSED_IMG)
 
-        mc alias set local \
+        mc alias set minio \
           ${{ secrets.MINIO_ENDPOINT }} \
           ${{ secrets.MINIO_ACCESS_KEY }} \
           ${{ secrets.MINIO_SECRET_KEY }}
 
         mc cp $COMPRESSED_IMG \
-          local/${{ secrets.MINIO_BUCKET }}/milkv/${{ gitea.ref_name }}/$BASENAME
+          minio/${{ secrets.MINIO_BUCKET }}/milkv/${{ gitea.ref_name }}/$BASENAME
